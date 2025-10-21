@@ -87,7 +87,7 @@ All data is saved atomically to prevent corruption.
 
 ## Permissions
 
-* Users need the **Tournament Organizer** role or admin permissions to create, start, or end tournaments.
+* Users need the **Tournament Organizer** role or admin permissions to create, start, or end tournaments. ( You need to change the Code to make it role restricted via role name, if you want to use a different name)
 * Players can register and report results for their own pods.
 
 ---
