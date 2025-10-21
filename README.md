@@ -7,7 +7,7 @@ A Discord bot to manage **EDH Free-For-All tournaments** with 1–4 player pods 
 
 ## Features
 
-* **3–4 Player Pods**: Supports 1–4 player free-for-all pods per round.
+* **1–4 Player Pods**: Supports 1–4 player free-for-all pods per round.
 * **Automatic Round Ending**: Rounds automatically end when all pods report results.
 * **Flexible Point System**:
 
