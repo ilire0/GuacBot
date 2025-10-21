@@ -1,7 +1,7 @@
 
 # EDH FFA Tournament Discord Bot / GuacBot
 
-A Discord bot to manage **EDH Free-For-All tournaments** with 3–4 player pods per round. Designed for casual and competitive play with automated point tracking and round management.
+A Discord bot to manage **EDH Free-For-All tournaments** with 1–4 player pods per round. Designed for casual and competitive play with automated point tracking and round management.
 
 ---
 
