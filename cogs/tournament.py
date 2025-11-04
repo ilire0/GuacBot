@@ -16,12 +16,6 @@ from dataclasses import dataclass, field, asdict
 from typing import List, Dict, Optional
 
 BOT = None
-MESSAGE_STATS_FILE = Path("message_stats.json")
-if MESSAGE_STATS_FILE.exists():
-    with open(MESSAGE_STATS_FILE, "r", encoding="utf-8") as f:
-        MESSAGE_STATS = json.load(f)
-else:
-    MESSAGE_STATS = {}
 
 DATA_FILE = Path("tournaments.json")
 
@@ -73,23 +67,6 @@ class Tournament:
     max_rounds: int = 4
     time_limit: int = 90
 
-async def register_user_past_messages(guild: discord.Guild, user: discord.Member, limit_per_channel: int = 10000):
-    gid = str(guild.id)
-    uid = str(user.id)
-    if gid not in MESSAGE_STATS:
-        MESSAGE_STATS[gid] = {}
-    total_added = 0
-    for channel in guild.text_channels:
-        try:
-            async for msg in channel.history(limit=limit_per_channel):
-                if msg.author.id == user.id:
-                    MESSAGE_STATS[gid][uid] = MESSAGE_STATS[gid].get(uid, 0) + 1
-                    total_added += 1
-        except Exception as e:
-            print(f"Failed to scan channel {channel.name}: {e}")
-    save_message_stats()
-    return total_added
-
 def load_all() -> Dict[str, Tournament]:
     if not DATA_FILE.exists():
         return {}
@@ -116,10 +93,6 @@ def load_all() -> Dict[str, Tournament]:
             time_limit=t.get('time_limit', 90)
         )
     return out
-
-def save_message_stats():
-    with open(MESSAGE_STATS_FILE, "w", encoding="utf-8") as f:
-        json.dump(MESSAGE_STATS, f, indent=2)
 
 def save_all(data: Dict[str, Tournament]):
     raw = {}
@@ -282,30 +255,6 @@ async def report_game(interaction: discord.Interaction, tournament_id: str, pod_
     else:
         await interaction.response.send_message(f"Pod results recorded for pod {pod_number}. Waiting for other pods to report.")
     save_all(TOURNAMENTS)
-
-@app_commands.command(name="register_past_messages_user", description="Register past messages of a specific user for the yapper leaderboard")
-@is_tournament_organizer()
-@app_commands.describe(user="User to scan", limit="Max messages per channel to scan (default 10000)")
-async def register_past_messages_user(interaction: discord.Interaction, user: discord.Member, limit: int = 10000):
-    if not interaction.user.guild_permissions.administrator:
-        return await interaction.response.send_message("Only admins can run this command.", ephemeral=True)
-    await interaction.response.send_message(f"Scanning past messages of {user.display_name}... This may take a while!", ephemeral=True)
-    count = await register_user_past_messages(interaction.guild, user, limit)
-    await interaction.followup.send(f"Registered {count} past messages for {user.display_name}.", ephemeral=True)
-
-@app_commands.command(name="yapper_leaderboard", description="Show the message leaderboard for this server")
-async def leaderboard(interaction: discord.Interaction):
-    gid = str(interaction.guild_id)
-    if gid not in MESSAGE_STATS or not MESSAGE_STATS[gid]:
-        return await interaction.response.send_message("No messages recorded yet!", ephemeral=True)
-    stats = MESSAGE_STATS[gid]
-    sorted_stats = sorted(stats.items(), key=lambda x: x[1], reverse=True)
-    lines = ["**Message Leaderboard:**"]
-    for i, (uid, count) in enumerate(sorted_stats[:10], start=1):
-        user = interaction.guild.get_member(int(uid))
-        name = user.display_name if user else f"User {uid}"
-        lines.append(f"{i}. **{name}** — {count} messages")
-    await interaction.response.send_message("\n".join(lines))
 
 @app_commands.command(name="standings", description="Show tournament standings")
 @is_tournament_organizer()
@@ -477,8 +426,6 @@ async def setup(bot: commands.Bot):
     bot.tree.add_command(register)
     bot.tree.add_command(start_round)
     bot.tree.add_command(report_game)
-    bot.tree.add_command(register_past_messages_user)
-    bot.tree.add_command(leaderboard)
     bot.tree.add_command(standings)
     bot.tree.add_command(my_standings)
     bot.tree.add_command(disqualify)

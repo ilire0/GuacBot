@@ -4,7 +4,8 @@ import re
 from dotenv import load_dotenv
 import discord
 from discord.ext import commands
-from cogs.tournament import MESSAGE_STATS, save_message_stats
+from cogs.message_tracking import MESSAGE_STATS, save_message_stats
+
 
 
 load_dotenv()
@@ -19,6 +20,7 @@ bot = commands.Bot(command_prefix="?", intents=intents)
 async def setup_hook():
     await bot.load_extension("cogs.tournament")
     await bot.load_extension("cogs.moderation")
+    await bot.load_extension("cogs.message_tracking")
 
 @bot.event
 async def on_ready():
