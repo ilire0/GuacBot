@@ -6,9 +6,11 @@ import discord
 from discord.ext import commands
 from cogs.tournament import MESSAGE_STATS, save_message_stats
 
+
 load_dotenv()
-TOKEN = os.getenv("BOT_TOKEN")
+TOKEN = os.getenv("DEV_BOT_TOKEN")
 intents = discord.Intents.default()
+intents.presences = True 
 intents.message_content = True
 intents.members = True
 bot = commands.Bot(command_prefix="?", intents=intents)
