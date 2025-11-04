@@ -1,20 +1,25 @@
 import discord
-from discord import app_commands
+from discord import app_commands, Interaction, Member
 from discord.ext import commands
 from typing import Optional
 
-@app_commands.command(name="purge", description="Delete a number of messages from a channel")
-@app_commands.checks.has_permissions(manage_messages=True)
-@app_commands.describe(amount="Number of messages to delete", channel="Channel to purge (defaults to current)")
-async def purge(interaction: discord.Interaction, amount: int, channel: Optional[discord.TextChannel] = None):
-    if amount < 1:
-        return await interaction.response.send_message("Amount must be at least 1.", ephemeral=True)
-    target = channel or interaction.channel
-    try:
-        deleted = await target.purge(limit=amount)
-        await interaction.response.send_message(f"Deleted {len(deleted)} messages from {target.mention}.", ephemeral=True)
-    except Exception as e:
-        await interaction.response.send_message(f"Failed to purge messages: {e}", ephemeral=True)
+class Moderation(commands.Cog):
+    def __init__(self, bot: commands.Bot):
+        self.bot = bot
+
+    @app_commands.command(name="purge", description="Purge messages from a user")
+    @app_commands.describe(target="User to purge messages from", limit="Number of messages to delete")
+    async def purge(self, interaction: Interaction, target: Member, limit: int = 10):
+        # Step 1: Defer interaction so Discord knows you're working on it
+        await interaction.response.defer(ephemeral=True)
+        try:
+            # Step 2: Do the long-running task
+            deleted = await interaction.channel.purge(limit=limit, check=lambda m: m.author == target)
+            # Step 3: Send a followup message instead of response
+            await interaction.followup.send(f"Deleted {len(deleted)} messages from {target.mention}.", ephemeral=True)
+        except Exception as e:
+            await interaction.followup.send(f"Failed to purge messages: {e}", ephemeral=True)
+
 
 @app_commands.command(name="grant_role", description="Grant a role to a member")
 @app_commands.checks.has_permissions(manage_roles=True)
@@ -68,8 +73,8 @@ class ModerationCog(commands.Cog):
 
 async def setup(bot: commands.Bot):
     cog = ModerationCog(bot)
+    await bot.add_cog(Moderation(bot))
     await bot.add_cog(cog)
-    bot.tree.add_command(purge)
     bot.tree.add_command(grant_role)
     bot.tree.add_command(revoke_role)
     bot.tree.add_command(ban)
